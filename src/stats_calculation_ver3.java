@@ -35,8 +35,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.LineReader;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.json.simple.*;
-
 
 
 
@@ -52,7 +50,7 @@ public class stats_calculation_ver3 extends Configured implements Tool {
 	
 	public int run ( String[] args ) throws Exception {
 		
-		String input = "Shuo/weather/2015/01/01/00/*";    // Input
+		String input = "Shuo/weather/2015/*/*/*/*";    // Input
 		String temp = "Shuo/output";       // Round one output
 		//String temp1 = "/scr/shuowang/lab3/exp2/temp1/";     // Round two output
 		//String output1 = "/scr/shuowang/lab3/exp2/output1/";   // Round three/final output
@@ -79,18 +77,18 @@ public class stats_calculation_ver3 extends Configured implements Tool {
 		conf.set("gids", gids);
 
 		Job job_one = new Job(conf, "ShuoJSONRecodReader"); 	
-		job_one.addFileToClassPath(new Path("Shuo/json-simple-1.1.jar"));
+
 		job_one.setJarByClass(stats_calculation_ver3.class); 
 
 		job_one.setNumReduceTasks(reduce_tasks);			
 		
-		//job_one.setMapOutputKeyClass(Text.class); 
-		//job_one.setMapOutputValueClass(Text.class); 
-		job_one.setOutputKeyClass(Text.class);         
+		job_one.setMapOutputKeyClass(Text.class); 
+		job_one.setMapOutputValueClass(Text.class); 
+		job_one.setOutputKeyClass(NullWritable.class);         
 		job_one.setOutputValueClass(Text.class);
 
 		job_one.setMapperClass(Map_One.class); 
-		//job_one.setReducerClass(Reduce_One.class);
+		job_one.setReducerClass(Reduce_One.class);
 
 		job_one.setInputFormatClass(TextInputFormat.class);  
 		
@@ -100,7 +98,7 @@ public class stats_calculation_ver3 extends Configured implements Tool {
 		// FileInputFormat.addInputPath(job_one, new Path(another_input_path)); // This is legal
 		FileOutputFormat.setOutputPath(job_one, new Path(temp));
 		// FileOutputFormat.setOutputPath(job_one, new Path(another_output_path)); // This is not allowed
-		
+
 		job_one.waitForCompletion(true); 
 
 		return 0;
@@ -127,45 +125,52 @@ public class stats_calculation_ver3 extends Configured implements Tool {
 			String hour = time.split(":")[0];
 			String minute = time.split(":")[1];
 			
-			String line = "";
-			for(int i=0;i<lines.length;i++){line+=lines[i];}
-			
-			// parse JSON
-			JSONObject obj = (JSONObject) JSONValue.parse(line);
-			// get user name and number of followers
-			//JSONObject userobj = (JSONObject) obj.get("user");
-			String name = (String) obj.get("time");
-			
-			// output <user name, number of followers>
-			context.write(new Text("time:"), new Text(name));
-			
-//			for (int i=5;i<lines.length;i++)
-//			{
-//				String[] line = lines[i].trim().split(",");
-//				
-//				if(line.length>3)
-//				{
-//				
-//				String id = line[0].split(": ")[1];
-//				if(Gids.contains(id))
-//				{
-//					String tmpc = line[1].split(": ")[1];
-//					String wawa = line[2].split(": ")[1];
-//					//String ptype = line[3].split(": ")[1];
-//					if(line[3].split(": ").length<2)
-//					{context.write(new Text(year+month+day+hour+","+id), new Text(lines[i]));}
-//					if(line[4].split(": ").length<2)
-//					{context.write(new Text(year+month+day+hour+","+id), new Text(lines[i]));}
-//					
-//					
-//					
-//				}
-//				}
-//				else
-//				{
-//					{context.write(new Text(year+month+day+hour), new Text(lines[i]));}
-//				}
-//			}				
+			for (int i=5;i<lines.length;i++)
+			{
+				String[] line = lines[i].trim().split(",");
+				
+				String id = line[0].split(": ")[1];
+				if(Gids.contains(id))
+				{
+					if(line.length==12)
+					{
+						String tmpc = line[1].split(": ")[1];
+						String wawa = line[2].split(": ")[1];
+						String ptype = line[3].split(": ")[1];					
+						String dwpc = line[4].split(": ")[1];
+						String smps = line[5].split(": ")[1];
+						String drct = line[6].split(": ")[1];
+						String vsby = line[7].split(": ")[1];
+						String roadtmpc = line[8].split(": ")[1];
+						String srad = line[9].split(": ")[1];
+						String snwd = line[10].split(": ")[1];
+						String pcpn = line[11].split(": ")[1];
+						// aggregated by key
+						context.write(new Text(year+month+day+hour+","+id), new Text(tmpc+","+wawa+","+ptype+","+dwpc
+								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
+					}
+					if(line.length==13)
+					{
+						String tmpc = line[1].split(": ")[1];
+						String wawa = line[2].split(": ")[1];
+						String ptype = line[4].split(": ")[1];					
+						String dwpc = line[5].split(": ")[1];
+						String smps = line[6].split(": ")[1];
+						String drct = line[7].split(": ")[1];
+						String vsby = line[8].split(": ")[1];
+						String roadtmpc = line[9].split(": ")[1];
+						String srad = line[10].split(": ")[1];
+						String snwd = line[11].split(": ")[1];
+						String pcpn = line[12].split(": ")[1];
+						// aggregated by key
+						context.write(new Text(year+month+day+hour+","+id), new Text(tmpc+","+wawa+","+ptype+","+dwpc
+								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
+					}
+					
+				}
+				
+				
+			}				
 		} // End method "map"
 		
 	} // End Class Map_One

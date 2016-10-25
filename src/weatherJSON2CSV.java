@@ -50,14 +50,23 @@ public class weatherJSON2CSV extends Configured implements Tool {
 	
 	public int run ( String[] args ) throws Exception {
 		
-		String input = "Shuo/weatherpull.txt";    // Input
+		String input = args[0];    // Input
 		String temp = "Shuo/output";       // Round one output
 		//String temp1 = "/scr/shuowang/lab3/exp2/temp1/";     // Round two output
 		//String output1 = "/scr/shuowang/lab3/exp2/output1/";   // Round three/final output
 		//String output2 = "/scr/shuowang/lab3/exp2/output2/";   // Round three/final output
-		
-		
-		int reduce_tasks = 16;  // The number of reduce tasks that will be assigned to the job
+//		String matchtable = "Shuo/TMC_TT_TableToExcel.csv";
+//		
+		int reduce_tasks = 1;  // The number of reduce tasks that will be assigned to the job
+//		
+//		FileSystem fs = FileSystem.get(new Configuration());
+//        BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(new Path(matchtable))));
+//        String line;
+//        String gids = "";
+//        while ((line = br.readLine()) != null) {
+//        	gids = gids + "," + line.split(",")[4];            
+//        }
+//        br.close();
 		
 		
 		Configuration conf = new Configuration();
@@ -65,20 +74,21 @@ public class weatherJSON2CSV extends Configured implements Tool {
 //		conf.set("mapreduce.map.memory.mb", "-Xmx4096m");
 //		conf.set("mapreduce.reduce.memory.mb", "-Xmx4096m");
 		conf.set("textinputformat.record.delimiter","}]}\n");
-		
+//		conf.set("gids", gids);
+
 		Job job_one = new Job(conf, "ShuoJSONRecodReader"); 	
 
 		job_one.setJarByClass(weatherJSON2CSV.class); 
 
 		job_one.setNumReduceTasks(reduce_tasks);			
 		
-		job_one.setMapOutputKeyClass(Text.class); 
-		job_one.setMapOutputValueClass(Text.class); 
+		//job_one.setMapOutputKeyClass(Text.class); 
+		//job_one.setMapOutputValueClass(Text.class); 
 		job_one.setOutputKeyClass(NullWritable.class);         
 		job_one.setOutputValueClass(Text.class);
 
 		job_one.setMapperClass(Map_One.class); 
-		job_one.setReducerClass(Reduce_One.class);
+		//job_one.setReducerClass(Reduce_One.class);
 
 		job_one.setInputFormatClass(TextInputFormat.class);  
 		
@@ -95,15 +105,15 @@ public class weatherJSON2CSV extends Configured implements Tool {
 	
 	} // End run
 
-	public static class Map_One extends Mapper<LongWritable, Text, Text, Text>  {		
+	public static class Map_One extends Mapper<LongWritable, Text, NullWritable, Text>  {		
 		public void map(LongWritable key, Text value, Context context) 
 								throws IOException, InterruptedException  {
 					
-			Configuration conf = context.getConfiguration();
-			String gid = conf.get("gids");
-			String[] gids = gid.split(",");
-			
-			List<String> Gids = Arrays.asList(gids);
+//			Configuration conf = context.getConfiguration();
+//			String gid = conf.get("gids");
+//			String[] gids = gid.split(",");
+//			
+//			List<String> Gids = Arrays.asList(gids);
 			
 			String[] lines = value.toString().split("\n");
 			String timestamp = lines[0].split("\"")[3];
@@ -120,23 +130,46 @@ public class weatherJSON2CSV extends Configured implements Tool {
 				String[] line = lines[i].trim().split(",");
 				
 				String id = line[0].split(": ")[1];
-				if(Gids.contains(id))
-				{
-					String tmpc = line[1].split(": ")[1];
-					String wawa = line[2].split(": ")[1];
-					String ptype = line[3].split(": ")[1];
-					String dwpc = line[4].split(": ")[1];
-					String smps = line[5].split(": ")[1];
-					String drct = line[6].split(": ")[1];
-					String vsby = line[7].split(": ")[1];
-					String roadtmpc = line[8].split(": ")[1];
-					String srad = line[9].split(": ")[1];
-					String snwd = line[10].split(": ")[1];
-					String pcpn = line[11].split(": ")[1];
-					// aggregated by day
-					context.write(new Text(year+month+day+","+id), new Text(tmpc+","+wawa+","+ptype+","+dwpc
-							+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
-				}
+//				if(Gids.contains(id))
+//				{
+					if(line.length==12)
+					{
+						String tmpc = line[1].split(": ")[1];
+						String wawa = line[2].split(": ")[1];
+						String ptype = line[3].split(": ")[1];					
+						String dwpc = line[4].split(": ")[1];
+						String smps = line[5].split(": ")[1];
+						String drct = line[6].split(": ")[1];
+						String vsby = line[7].split(": ")[1];
+						String roadtmpc = line[8].split(": ")[1];
+						String srad = line[9].split(": ")[1];
+						String snwd = line[10].split(": ")[1];
+						String pcpn = line[11].split(": ")[1].split("}")[0];
+						// aggregated by key
+						context.write(NullWritable.get(), new Text(date+" "+hour+":"+minute+","+id+","+tmpc+","+wawa+","+ptype+","+dwpc
+								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
+					}
+					if(line.length==13)
+					{
+						String tmpc = line[1].split(": ")[1];
+						String wawa = (line[2]+";"+line[3]).split(": ")[1];
+						String ptype = line[4].split(": ")[1];					
+						String dwpc = line[5].split(": ")[1];
+						String smps = line[6].split(": ")[1];
+						String drct = line[7].split(": ")[1];
+						String vsby = line[8].split(": ")[1];
+						String roadtmpc = line[9].split(": ")[1];
+						String srad = line[10].split(": ")[1];
+						String snwd = line[11].split(": ")[1];
+						String pcpn = line[12].split(": ")[1].split("}")[0];
+						// aggregated by key
+						context.write(NullWritable.get(), new Text(date+" "+hour+":"+minute+","+id+","+tmpc+","+wawa+","+ptype+","+dwpc
+								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
+					}
+					
+//				}
+				
+				
 			}				
 		} // End method "map"
 		
@@ -182,8 +215,8 @@ public class weatherJSON2CSV extends Configured implements Tool {
 				srad2_sum +=  Math.pow(Double.parseDouble(data[8]), 2);
 				snwd_sum += Double.parseDouble(data[9]);
 				snwd2_sum +=  Math.pow(Double.parseDouble(data[9]), 2);
-				pcpn_sum += Double.parseDouble(data[10]);
-				pcpn2_sum +=  Math.pow(Double.parseDouble(data[10]), 2);
+				pcpn_sum += Double.parseDouble(data[10].split("}")[0]);
+				pcpn2_sum +=  Math.pow(Double.parseDouble(data[10].split("}")[0]), 2);
 			}
 			
 			double tmpc_avg = tmpc_sum/counter;
@@ -210,11 +243,6 @@ public class weatherJSON2CSV extends Configured implements Tool {
 		} // End method "reduce" 
 		
 	} // End Class Reduce_One
-	
-	
-
-	
-
  	
 }
  	
