@@ -149,19 +149,26 @@ public class weatherJSON2CSV extends Configured implements Tool {
 						context.write(NullWritable.get(), new Text(date+" "+hour+":"+minute+","+id+","+tmpc+","+wawa+","+ptype+","+dwpc
 								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
 					}
-					if(line.length==13)
+					if(line.length>=13)
 					{
+						int l =line.length;
+						
 						String tmpc = line[1].split(": ")[1];
-						String wawa = (line[2]+";"+line[3]).split(": ")[1];
-						String ptype = line[4].split(": ")[1];					
-						String dwpc = line[5].split(": ")[1];
-						String smps = line[6].split(": ")[1];
-						String drct = line[7].split(": ")[1];
-						String vsby = line[8].split(": ")[1];
-						String roadtmpc = line[9].split(": ")[1];
-						String srad = line[10].split(": ")[1];
-						String snwd = line[11].split(": ")[1];
-						String pcpn = line[12].split(": ")[1].split("}")[0];
+						
+						String wawa_raw="";
+						for(int j =2;j<l-10;j++){wawa_raw+=line[j]+";";}
+						//String wawa = (line[2]+";"+line[3]).split(": ")[1];
+						String wawa = (wawa_raw+line[l-10]).split(": ")[1];
+						
+						String ptype = line[l-9].split(": ")[1];					
+						String dwpc = line[l-8].split(": ")[1];
+						String smps = line[l-7].split(": ")[1];
+						String drct = line[l-6].split(": ")[1];
+						String vsby = line[l-5].split(": ")[1];
+						String roadtmpc = line[l-4].split(": ")[1];
+						String srad = line[l-3].split(": ")[1];
+						String snwd = line[l-2].split(": ")[1];
+						String pcpn = line[l-1].split(": ")[1].split("}")[0];
 						// aggregated by key
 						context.write(NullWritable.get(), new Text(date+" "+hour+":"+minute+","+id+","+tmpc+","+wawa+","+ptype+","+dwpc
 								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));

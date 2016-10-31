@@ -1,7 +1,10 @@
 import java.io.*;
 import java.lang.*;
+import java.lang.reflect.Array;
+import java.math.RoundingMode;
 import java.util.*;
 import java.net.*;
+import java.text.DecimalFormat;
 
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.conf.*;
@@ -18,31 +21,13 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 public class testJSON {
 
 	public static void main(String[] args) throws IOException {
-		String line = "    {\"gid\": 1, \"tmpc\": 5.40, \"wawa\": [], \"ptype\": 0, \"dwpc\": -3.10, \"smps\": 9.3, "
-				+ "\"drct\": 340, \"vsby\": 16.093, \"roadtmpc\": 11.80,\"srad\": 206.60, \"snwd\": 0.00, \"pcpn\": -12.00},";
 		
-		System.out.println(line);
+		String xx = "10";
+		String x = xx.split("}")[0];
 		
 		
-		//line = "{\"time\": \"2015\",";
+		System.out.println(x);
 		
-		String[] lines = line.split(",");
-		System.out.println(lines.length);
-		for (int i=0;i<lines.length;i++)
-		{
-			System.out.println(lines[i]);
-		}
-		
-		line = " \"wawa\": []";
-		
-		lines = line.split(": ");
-		System.out.println(lines.length);
-		for (int i=0;i<lines.length;i++)
-		{
-			System.out.println(lines[i]);
-		}
-		
-
 	}
 
 }
