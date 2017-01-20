@@ -39,11 +39,11 @@ import org.apache.hadoop.util.ToolRunner;
 
 
 
-public class stats_calculation extends Configured implements Tool {
+public class stats_calculation_JSON extends Configured implements Tool {
 	
 	public static void main ( String[] args ) throws Exception {
 		
-		int res = ToolRunner.run(new Configuration(), new stats_calculation(), args);
+		int res = ToolRunner.run(new Configuration(), new stats_calculation_JSON(), args);
 		System.exit(res); 
 		
 	} // End main
@@ -78,7 +78,7 @@ public class stats_calculation extends Configured implements Tool {
 
 		Job job_one = new Job(conf, "ShuoJSONRecodReader"); 	
 
-		job_one.setJarByClass(stats_calculation.class); 
+		job_one.setJarByClass(stats_calculation_JSON.class); 
 
 		job_one.setNumReduceTasks(reduce_tasks);			
 		

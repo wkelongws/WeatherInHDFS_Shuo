@@ -12,7 +12,7 @@ import java.io.InputStreamReader;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
-
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -41,11 +41,11 @@ import org.apache.hadoop.util.ToolRunner;
 
 
 
-public class stats_calculation_CSV extends Configured implements Tool {
+public class weatherFilter extends Configured implements Tool {
 	
 	public static void main ( String[] args ) throws Exception {
 		
-		int res = ToolRunner.run(new Configuration(), new stats_calculation_CSV(), args);
+		int res = ToolRunner.run(new Configuration(), new weatherFilter(), args);
 		System.exit(res); 
 		
 	} // End main
@@ -53,30 +53,18 @@ public class stats_calculation_CSV extends Configured implements Tool {
 	public int run ( String[] args ) throws Exception {
 		
 		String input = args[0];    // Input
-		String temp = "Shuo/output_stats";       // Round one output
-		//String temp1 = "/scr/shuowang/lab3/exp2/temp1/";     // Round two output
-		//String output1 = "/scr/shuowang/lab3/exp2/output1/";   // Round three/final output
-		//String output2 = "/scr/shuowang/lab3/exp2/output2/";   // Round three/final output
-		String matchtable = "Shuo/GID_Reliability.csv";
+		String temp = "Shuo/output_spe1";       // Round one output
+
 		
 		int reduce_tasks = 16;  // The number of reduce tasks that will be assigned to the job
-		
-		FileSystem fs = FileSystem.get(new Configuration());
-        BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(new Path(matchtable))));
-        String line;
-        String gids = "";
-        while ((line = br.readLine()) != null) {
-        	gids = gids + "," + line;            
-        }
-        br.close();
-//		String gids = "74041,74100,87527,86935,85030,87526";
+
 		
 		Configuration conf = new Configuration();
-		conf.set("gids", gids);
 
-		Job job_one = new Job(conf, "ShuoJSONRecodReader"); 	
 
-		job_one.setJarByClass(stats_calculation_CSV.class); 
+		Job job_one = new Job(conf, "ShuoweatherFilter"); 	
+
+		job_one.setJarByClass(weatherFilter.class); 
 
 		job_one.setNumReduceTasks(reduce_tasks);			
 		
@@ -107,11 +95,7 @@ public class stats_calculation_CSV extends Configured implements Tool {
 		public void map(LongWritable key, Text value, Context context) 
 								throws IOException, InterruptedException  {
 					
-			Configuration conf = context.getConfiguration();
-			String gid = conf.get("gids");
-			String[] gids = gid.split(",");
 			
-			List<String> Gids = Arrays.asList(gids);
 			
 			String[] lines = value.toString().split(",");
 			
@@ -125,8 +109,7 @@ public class stats_calculation_CSV extends Configured implements Tool {
 			String minute = time.split(":")[1];
 			
 			String id = lines[1];
-//			if(Gids.contains(id))
-//			{
+			
 				String tmpc = lines[2];
 				String wawa = lines[3];
 				String ptype = lines[4];
@@ -139,11 +122,14 @@ public class stats_calculation_CSV extends Configured implements Tool {
 				String snwd = lines[11];
 				String pcpn = lines[12];
 				// aggregated by key
-						
-				context.write(new Text(year+month+day+","+hour+","+id), new Text(tmpc+","+wawa+","+ptype+","+dwpc
-								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
 				
-//			}
+				int a = ThreadLocalRandom.current().nextInt(1,  1001);
+				if (a==1) 		
+				{
+				context.write(new Text(year+month), new Text(tmpc+","+wawa+","+ptype+","+dwpc
+								+","+smps+","+drct+","+vsby+","+roadtmpc+","+srad+","+snwd+","+pcpn));
+				}
+			
 			
 		} // End method "map"
 		
@@ -156,134 +142,101 @@ public class stats_calculation_CSV extends Configured implements Tool {
 			int counter = 0;
 			double tmpc_sum = 0.0;
 			double tmpc2_sum = 0.0;
+			double tmpc_max = -100.0;
+			double tmpc_min = 100.0;
+			
 			double dwpc_sum = 0.0;
 			double dwpc2_sum = 0.0;
+			double dwpc_max = -100.0;
+			double dwpc_min = 100.0;
+			
 			double smps_sum = 0.0;
 			double smps2_sum = 0.0;
+			double smps_max = -100.0;
+			double smps_min = 100.0;
+			
 			double drct_sum = 0.0;
 			double drct2_sum=0.0;
+			double drct_max = -100.0;
+			double drct_min = 100.0;
+			
 			double vsby_sum = 0.0;
 			double vsby2_sum = 0.0;
+			double vsby_max = -100.0;
+			double vsby_min = 100.0;
+			
 			double roadtmpc_sum = 0.0;
 			double roadtmpc2_sum = 0.0;
+			double roadtmpc_max = -100.0;
+			double roadtmpc_min = 100.0;
+			
 			double srad_sum = 0.0;
 			double srad2_sum = 0.0;
+			double srad_max = -100.0;
+			double srad_min = 100.0;
+			
 			double snwd_sum = 0.0;
 			double snwd2_sum = 0.0;
+			double snwd_max = -100.0;
+			double snwd_min = 100.0;
+			
 			double pcpn_sum = 0.0;
 			double pcpn2_sum = 0.0;
-			
-			String[] wawa_table = 
-				{
-					"AS.Y",
-					"EH.A",
-					"EC.W",
-					"FA.A",
-					"EH.W",
-					"HT.Y",
-					"FZ.W",
-					"FR.Y",
-					"FW.A",
-					"FW.W",
-					"FZ.A",
-					"HZ.W",
-					"WS.A",
-					"BZ.A",
-					"SV.A",
-					"TO.A",
-					"FL.A",
-					"FL.S",
-					"WC.A",
-					"FL.Y",
-					"HW.A",
-					"WC.W",
-					"FL.W",
-					"BS.Y",
-					"WI.Y",
-					"WC.Y",
-					"FA.W",
-					"FA.Y",
-					"FF.A",
-					"FF.W",
-					"FG.Y",
-					"HW.W",
-					"SN.Y",
-					"SB.Y",
-					"WW.Y",
-					"SV.W",
-					"HS.W",
-					"WS.W",
-					"ZF.Y",
-					"ZR.Y",
-					"BZ.W",
-					"TO.W",
-					"IS.W"
-				};
-			String[] ptype_table = 
-				{
-					"-3",
-					"0",
-					"1",
-					"2",
-					"3",
-					"4",
-					"5",
-					"6",
-					"7",
-					"8",
-					"9",
-					"10",
-					"91",
-					"96"
-				};
-			
-			int[] wawa_counter = new int[wawa_table.length];
-			int[] ptype_counter = new int[ptype_table.length];
+			double pcpn_max = -100.0;
+			double pcpn_min = 100.0;
 			
 			
 			for (Text val : values) {
+				
+				try{
 				String[] data =val.toString().split(",");
 				counter ++;
 				tmpc_sum += Double.parseDouble(data[0]);
+				if(Double.parseDouble(data[0])>tmpc_max){tmpc_max=Double.parseDouble(data[0]);}
+				if(Double.parseDouble(data[0])<tmpc_min){tmpc_min=Double.parseDouble(data[0]);}
 				tmpc2_sum +=  Math.pow(Double.parseDouble(data[0]), 2);
+				
 				dwpc_sum += Double.parseDouble(data[3]);
 				dwpc2_sum +=  Math.pow(Double.parseDouble(data[3]), 2);
+				if(Double.parseDouble(data[3])>dwpc_max){dwpc_max=Double.parseDouble(data[3]);}
+				if(Double.parseDouble(data[3])<dwpc_min){dwpc_min=Double.parseDouble(data[3]);}
+				
 				smps_sum += Double.parseDouble(data[4]);
 				smps2_sum +=  Math.pow(Double.parseDouble(data[4]), 2);
+				if(Double.parseDouble(data[4])>smps_max){smps_max=Double.parseDouble(data[4]);}
+				if(Double.parseDouble(data[4])<smps_min){smps_min=Double.parseDouble(data[4]);}
+				
 				drct_sum += Double.parseDouble(data[5]);
 				drct2_sum +=  Math.pow(Double.parseDouble(data[5]), 2);
+				if(Double.parseDouble(data[5])>drct_max){drct_max=Double.parseDouble(data[5]);}
+				if(Double.parseDouble(data[5])<drct_min){drct_min=Double.parseDouble(data[5]);}
+				
 				vsby_sum += Double.parseDouble(data[6]);
 				vsby2_sum +=  Math.pow(Double.parseDouble(data[6]), 2);
+				if(Double.parseDouble(data[6])>vsby_max){vsby_max=Double.parseDouble(data[6]);}
+				if(Double.parseDouble(data[6])<vsby_min){vsby_min=Double.parseDouble(data[6]);}
+				
 				roadtmpc_sum += Double.parseDouble(data[7]);
 				roadtmpc2_sum +=  Math.pow(Double.parseDouble(data[7]), 2);
+				if(Double.parseDouble(data[7])>roadtmpc_max){roadtmpc_max=Double.parseDouble(data[7]);}
+				if(Double.parseDouble(data[7])<roadtmpc_min){roadtmpc_min=Double.parseDouble(data[7]);}
+				
 				srad_sum += Double.parseDouble(data[8]);
 				srad2_sum +=  Math.pow(Double.parseDouble(data[8]), 2);
+				if(Double.parseDouble(data[8])>srad_max){srad_max=Double.parseDouble(data[8]);}
+				if(Double.parseDouble(data[8])<srad_min){srad_min=Double.parseDouble(data[8]);}
+				
 				snwd_sum += Double.parseDouble(data[9]);
 				snwd2_sum +=  Math.pow(Double.parseDouble(data[9]), 2);
+				if(Double.parseDouble(data[9])>snwd_max){snwd_max=Double.parseDouble(data[9]);}
+				if(Double.parseDouble(data[9])<snwd_min){snwd_min=Double.parseDouble(data[9]);}
+				
 				pcpn_sum += Math.max(0.0, Double.parseDouble(data[10]));
 				pcpn2_sum +=  Math.pow(Math.max(0.0,Double.parseDouble(data[10])), 2);
-				
-				String[] wawa_raw=data[1].split(";");
-				for (int i=0;i<wawa_raw.length;i++)
-				{
-					String wawa = wawa_raw[i].replaceAll("[\\[\\]\" ]", "");
-					for (int j=0;j<wawa_table.length;j++)
-					{
-						if (wawa_table[j].equals(wawa))
-						{
-							wawa_counter[j]++;
-						}
-					}
-					
+				if(Double.parseDouble(data[10])>pcpn_max){pcpn_max=Double.parseDouble(data[10]);}
+				if(Double.parseDouble(data[10])<pcpn_min){pcpn_min=Double.parseDouble(data[10]);}
 				}
-				String ptype = data[2];
-				for (int j=0;j<ptype_table.length;j++)
-				{
-					if (ptype_table[j].equals(ptype))
-					{
-						ptype_counter[j]++;
-					}
-				}
+				catch (Exception e){}
 				
 			}
 			
@@ -306,19 +259,6 @@ public class stats_calculation_CSV extends Configured implements Tool {
 			double pcpn_avg = 12*pcpn_sum/counter;
 			double pcpn_var = 12*(pcpn2_sum/counter-Math.pow(pcpn_avg/12, 2));
 			
-			String wawa_summary = "";
-			String ptype_summary = "";
-			
-			for(int i=0;i<ptype_counter.length;i++)
-			{
-				ptype_summary+=ptype_counter[i]+",";
-			}
-			
-			for(int i=0;i<wawa_counter.length-1;i++)
-			{
-				wawa_summary+=wawa_counter[i]+",";
-			}
-			wawa_summary+=wawa_counter[wawa_counter.length-1];
 			
 			DecimalFormat df = new DecimalFormat("#.##");
 			df.setRoundingMode(RoundingMode.HALF_UP);
@@ -326,24 +266,49 @@ public class stats_calculation_CSV extends Configured implements Tool {
 			context.write(NullWritable.get(),new Text(
 							key.toString()+","+
 							df.format(tmpc_avg)+","+
+							df.format(tmpc_max)+","+
+							df.format(tmpc_min)+","+
 							df.format(tmpc_var)+","+
+							
 							df.format(dwpc_avg)+","+
 							df.format(dwpc_var)+","+
+							df.format(dwpc_max)+","+
+							df.format(dwpc_min)+","+
+							
 							df.format(smps_avg)+","+
 							df.format(smps_var)+","+
+							df.format(smps_max)+","+
+							df.format(smps_min)+","+
+							
 							df.format(drct_avg)+","+
 							df.format(drct_var)+","+
+							df.format(drct_max)+","+
+							df.format(drct_min)+","+
+							
 							df.format(vsby_avg)+","+
 							df.format(vsby_var)+","+
+							df.format(vsby_max)+","+
+							df.format(vsby_min)+","+
+							
 							df.format(roadtmpc_avg)+","+
 							df.format(roadtmpc_var)+","+
+							df.format(roadtmpc_max)+","+
+							df.format(roadtmpc_min)+","+
+							
 							df.format(srad_avg)+","+
 							df.format(srad_var)+","+
+							df.format(srad_max)+","+
+							df.format(srad_min)+","+
+							
 							df.format(snwd_avg)+","+
 							df.format(snwd_var)+","+
+							df.format(snwd_max)+","+
+							df.format(snwd_min)+","+
+							
 							df.format(pcpn_avg)+","+
 							df.format(pcpn_var)+","+
-							ptype_summary+wawa_summary
+							df.format(pcpn_max)+","+
+							df.format(pcpn_min)
 							));
 		} // End method "reduce" 
 		
