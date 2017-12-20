@@ -15,4 +15,4 @@ This code provide 3 major functions:
 3. Rearrange data as matrix based on geolocation and convert data from CSV to PNG (images) then further convert the Sequence file format of Hadoop for space saving and future fast query.
 
 
-### Here is [my presentaion](https://www.youtube.com/watch?v=fwpFZIJSotE&t=729s) of the weather visualizaion demo in 8th International Visualization in Transportation Symposium, Washington DC, July 27th, 2017 
+### Here is [my presentaion](https://www.youtube.com/watch?v=fwpFZIJSotE&t=729s) of the weather visualizaion demo in 8th International Visualization in Transportation Symposium, Washington DC, July 27th, 2017 and there are the cooresponding [slides](https://1drv.ms/p/s!AmGvrNE6VIsKukdN1fWlnyDlMIfi)
